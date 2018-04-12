@@ -1,3 +1,8 @@
+package com.strangerws.ssu.mss;
+
+import com.strangerws.ssu.mss.model.SeviceSystem;
+import com.strangerws.ssu.mss.util.Type;
+
 public class Main {
     public static final Type REQUIREMENT_STREAM = Type.EXPONENT;
     public static final Type SERVICE_TIME_RULE = Type.EXPONENT;
@@ -7,7 +12,7 @@ public class Main {
     public static final int TEST_COUNT = 1000;
 
     public static void main(String[] args) {
-        System mss = new System(REQUIREMENT_STREAM, SERVICE_TIME_RULE, DEVICES, QUEUE_LENGTH, REQUIREMENT_SOURCES);
+        SeviceSystem mss = new SeviceSystem(REQUIREMENT_STREAM, SERVICE_TIME_RULE, DEVICES, QUEUE_LENGTH, REQUIREMENT_SOURCES);
         mss.run();
     }
 }
