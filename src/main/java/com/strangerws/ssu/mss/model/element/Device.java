@@ -13,12 +13,12 @@ public class Device {
 
     }
 
-    public void setServing(Requirement requirement){
+    public void setServing(Requirement requirement) {
         serving = requirement;
         busy = true;
     }
 
-    public Requirement finishServing(){
+    public Requirement finishServing() {
         Requirement served = serving;
         serving = null;
         busy = false;

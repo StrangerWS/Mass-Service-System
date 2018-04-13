@@ -2,10 +2,12 @@ package com.strangerws.ssu.mss.model.element;
 
 import com.strangerws.ssu.mss.util.Type;
 
+import java.util.Random;
+
 public class Randomizer {
 
-    private static final double LAMBDA = 0.9d;
-    private static final double NU = 0.95d;
+    private static final double LAMBDA = 0.3d;
+    private static final double NU = 0.35d;
     private final boolean forArrive;
 
     private Type randomType;
@@ -16,11 +18,14 @@ public class Randomizer {
     }
 
     public double getTimestamp() {//for arrive or for serving boolean
+        double result = 0;
         switch (randomType) {
             case EXPONENT:
-                return forArrive ? (-1d / LAMBDA) * Math.log(Math.random()) : (-1d / NU) * Math.log(Math.random());
+                result = forArrive ? (-1d / LAMBDA) * Math.log(Math.random()) : (-1d / NU) * Math.log(Math.random());
+                System.out.println(result);
+                return result;
             default:
-                return 0;
+                return result;
         }
     }
 }

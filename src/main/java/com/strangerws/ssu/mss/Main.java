@@ -1,6 +1,6 @@
 package com.strangerws.ssu.mss;
 
-import com.strangerws.ssu.mss.model.SeviceSystem;
+import com.strangerws.ssu.mss.model.ServiceSystem;
 import com.strangerws.ssu.mss.util.Type;
 
 public class Main {
@@ -12,7 +12,7 @@ public class Main {
     public static final int TEST_COUNT = 1000;
 
     public static void main(String[] args) {
-        SeviceSystem mss = new SeviceSystem(REQUIREMENT_STREAM, SERVICE_TIME_RULE, DEVICES, QUEUE_LENGTH, REQUIREMENT_SOURCES);
+        ServiceSystem mss = new ServiceSystem(REQUIREMENT_STREAM, SERVICE_TIME_RULE, DEVICES, QUEUE_LENGTH, REQUIREMENT_SOURCES);
         mss.run();
     }
 }
