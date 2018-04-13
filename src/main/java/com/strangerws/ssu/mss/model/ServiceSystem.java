@@ -12,56 +12,45 @@ import java.util.*;
 public class ServiceSystem {
     private Randomizer streamRandomizer;
     private Randomizer serviceRandomizer;
-    private List<Device> devices;
-    private List<Generator> generators;
-    private Queue<Requirement> queueWaiting;
-    private Queue<Requirement> queueServed;
-    private Map<Integer, Integer> exactCount;
+    List<Device> devices;
+    private Generator generator;
+    Queue<Requirement> queueWaiting;
+    Queue<Requirement> queueServed;
+    Map<Integer, Integer> exactCount = new HashMap<>();
 
-    private double time = 0d;
+    double time = 0d;
     private double generationTime = 0d;
     private double serviceTime = Double.MAX_VALUE;
     private double exitTime = Double.MAX_VALUE;
-    private double expectation = 0d;
-    private boolean sourcesDrained;
+    double expectation = 0d;
 
-    public ServiceSystem(Type streamRule, Type serviceRule, int deviceCount, int queueLength, int sources) {
+    public ServiceSystem(Type streamRule, Type serviceRule, int deviceCount, int queueLength, Generator generator) {
 
         streamRandomizer = new Randomizer(streamRule, true);
         serviceRandomizer = new Randomizer(serviceRule, false);
         queueWaiting = new ArrayDeque<>(queueLength);
         queueServed = new ArrayDeque<>();
         devices = new ArrayList<>(deviceCount);
-        generators = new ArrayList<>(sources);
-        exactCount = new HashMap<>();
+        this.generator = generator;
 
         for (int i = 0; i < deviceCount; i++) {
             devices.add(new Device());
         }
-
-        for (int i = 0; i < sources; i++) {
-            generators.add(new Generator(Main.TEST_COUNT / sources));
-        }
     }
 
     public void run() {
-        while (!sourcesDrained) {
-            if (time >= generationTime) {
-                generationCycle(getActiveGenerator());
-                serviceCycle();
-            }
-
-            if (time >= serviceTime) {
-                serviceCycle();
-            }
-            if (time >= exitTime) {
-                exitCycle();
-            }
-            time += getNextActionTime();
-            checkSourcesDrained();
+        if (time >= generationTime) {
+            generationCycle();
+            serviceCycle();
         }
-        System.out.println("finished");
-        calculate();
+
+        if (time >= serviceTime) {
+            serviceCycle();
+        }
+        if (time >= exitTime) {
+            exitCycle();
+        }
+        time += getNextActionTime();
     }
 
     private double getNextActionTime() {
@@ -73,40 +62,14 @@ public class ServiceSystem {
         return Collections.min(times);
     }
 
-    private Generator getActiveGenerator() {
-        double minTime = Double.MAX_VALUE;
-        Generator min = null;
-        for (Generator generator : generators) {
-            if (generator.getNextTime() < minTime) {
-                minTime = generator.getNextTime();
-                min = generator;
-            }
-        }
-        generationTime = minTime;
-        return min;
-    }
-
-    private void checkSourcesDrained() {
-        int drained = 0;
-
-        for (Generator generator : generators) {
-            if (generator.getElements().isEmpty()) {
-                drained++;
-            }
-        }
-        if (drained == generators.size()) {
-            sourcesDrained = true;
-        }
-    }
-
-    private void generationCycle(Generator generator) {
+    private void generationCycle() {
         if (!generator.getElements().isEmpty()) {
             Requirement tmp = generator.getElements().poll();
             if (queueWaiting.size() < Main.QUEUE_LENGTH) {
                 tmp.setArriveTime(time);
                 queueWaiting.add(tmp);
             }
-            generator.setNextTime(time += streamRandomizer.getTimestamp());
+            generationTime = time + streamRandomizer.getTimestamp();
         }
     }
 
@@ -118,6 +81,7 @@ public class ServiceSystem {
                     tmp.setServiceTime(time);
                     exitTime = time + serviceRandomizer.getTimestamp();
                     device.setServing(tmp);
+                    break;
                 }
             }
         } else serviceTime = Double.MAX_VALUE;
@@ -125,11 +89,13 @@ public class ServiceSystem {
 
     private void exitCycle() {
         for (Device device : devices) {
-            Requirement tmp = device.finishServing();
-            tmp.setExitTime(time);
-            serviceTime = time;
-            expectation += tmp.getExitTime() - tmp.getArriveTime();
-            queueServed.add(tmp);
+            if (device.isBusy()) {
+                Requirement tmp = device.finishServing();
+                tmp.setExitTime(time);
+                serviceTime = time;
+                expectation += tmp.getExitTime() - tmp.getArriveTime();
+                queueServed.add(tmp);
+            }
         }
     }
 
@@ -149,18 +115,4 @@ public class ServiceSystem {
         }
     }
 
-    private void calculate() {
-        int served = queueServed.size();
-        double requirements = 0;
-
-        expectation /= time;
-        System.out.println(exactCount.toString());
-
-        for (Map.Entry<Integer, Integer> entry : exactCount.entrySet()) {
-            requirements += (double) entry.getKey() * entry.getValue() / served;
-        }
-        System.out.println("Served " + served);
-        System.out.println("Average time in system: " + expectation);
-        System.out.println("Average requirements in system: " + requirements);
-    }
 }
