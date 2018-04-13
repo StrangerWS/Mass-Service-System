@@ -151,13 +151,16 @@ public class ServiceSystem {
 
     private void calculate() {
         int served = queueServed.size();
-        //int
+        double requirements = 0;
 
         expectation /= time;
         System.out.println(exactCount.toString());
 
-
-
-        System.out.println("Average time in system: " + expectation + "\nServed " + served);
+        for (Map.Entry<Integer, Integer> entry : exactCount.entrySet()) {
+            requirements += (double) entry.getKey() * entry.getValue() / served;
+        }
+        System.out.println("Served " + served);
+        System.out.println("Average time in system: " + expectation);
+        System.out.println("Average requirements in system: " + requirements);
     }
 }
