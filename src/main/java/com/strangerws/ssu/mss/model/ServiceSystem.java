@@ -1,6 +1,5 @@
 package com.strangerws.ssu.mss.model;
 
-import com.strangerws.ssu.mss.Main;
 import com.strangerws.ssu.mss.model.element.Device;
 import com.strangerws.ssu.mss.model.element.Generator;
 import com.strangerws.ssu.mss.model.element.Randomizer;
@@ -41,6 +40,7 @@ public class ServiceSystem {
     public void run() {
         if (time >= generationTime) {
             generationCycle();
+            calculateRequirementsInSystem();
             serviceCycle();
         }
 
@@ -58,33 +58,31 @@ public class ServiceSystem {
         times.add(generationTime);
         times.add(serviceTime);
         times.add(exitTime);
-        calculateRequirementsInSystem();
+
         return Collections.min(times);
     }
 
     private void generationCycle() {
         if (!generator.getElements().isEmpty()) {
             Requirement tmp = generator.getElements().poll();
-            if (queueWaiting.size() < Main.QUEUE_LENGTH) {
-                tmp.setArriveTime(time);
-                queueWaiting.add(tmp);
-            }
+            tmp.setArriveTime(time);
+            queueWaiting.add(tmp);
             generationTime = time + streamRandomizer.getTimestamp();
         }
     }
 
     private void serviceCycle() {
-        if (queueWaiting.size() > 0) {
-            for (Device device : devices) {
+        for (Device device : devices) {
+            if (queueWaiting.size() > 0) {
+                Requirement tmp = queueWaiting.poll();
                 if (!device.isBusy()) {
-                    Requirement tmp = queueWaiting.poll();
                     tmp.setServiceTime(time);
                     exitTime = time + serviceRandomizer.getTimestamp();
                     device.setServing(tmp);
                     break;
                 }
-            }
-        } else serviceTime = Double.MAX_VALUE;
+            } else serviceTime = Double.MAX_VALUE;
+        }
     }
 
     private void exitCycle() {
