@@ -5,6 +5,7 @@ import com.strangerws.ssu.mss.model.element.Generator;
 import com.strangerws.ssu.mss.model.element.Randomizer;
 import com.strangerws.ssu.mss.model.element.Requirement;
 import com.strangerws.ssu.mss.util.Type;
+import javafx.util.Pair;
 
 import java.util.*;
 
@@ -16,6 +17,7 @@ public class ServiceSystem {
     Queue<Requirement> queueWaiting;
     Queue<Requirement> queueServed;
     Map<Integer, Integer> exactCount = new HashMap<>();
+    Pair<Integer, Integer> requirementsNow;
 
     double time = 0d;
     private double generationTime = 0d;
@@ -40,7 +42,7 @@ public class ServiceSystem {
     public void run() {
         if (time >= generationTime) {
             generationCycle();
-            calculateRequirementsInSystem();
+            requirementsNow = calculateRequirementsInSystem();
             serviceCycle();
         }
 
@@ -97,7 +99,7 @@ public class ServiceSystem {
         }
     }
 
-    private void calculateRequirementsInSystem() {
+    private Pair<Integer, Integer> calculateRequirementsInSystem() {
         int requirementsInSystem = 0;
 
         requirementsInSystem += queueWaiting.size();
@@ -105,12 +107,14 @@ public class ServiceSystem {
             if (device.isBusy()) requirementsInSystem++;
         }
 
+        int times = 1;
         if (exactCount.containsKey(requirementsInSystem)) {
-            int times = exactCount.remove(requirementsInSystem);
-            exactCount.put(requirementsInSystem, ++times);
-        } else {
-            exactCount.put(requirementsInSystem, 1);
+            times = exactCount.remove(requirementsInSystem);
+            times++;
+
         }
+        exactCount.put(requirementsInSystem, times);
+        return new Pair<>(requirementsInSystem, times);
     }
 
 }
