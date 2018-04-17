@@ -16,6 +16,7 @@ public class ServiceNet {
     private Map<Integer, Integer> exactCount;
     private final Random random = new Random();
 
+
     public ServiceNet() {
         exactCount = new HashMap<>();
         generator = new Generator(Main.TEST_COUNT);
@@ -63,6 +64,6 @@ public class ServiceNet {
         System.out.println("Served " + served);
         System.out.println("Average time in system: " + expectation);
         System.out.println("Average requirements in system: " + requirements);
-        System.out.println("Decline probability: " + (double) served / Main.TEST_COUNT);
+        System.out.println("Decline probability: " + ((double) 1 -  (double)served / Main.TEST_COUNT));
     }
 }

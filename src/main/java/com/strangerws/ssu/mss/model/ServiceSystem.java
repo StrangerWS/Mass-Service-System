@@ -24,6 +24,7 @@ public class ServiceSystem {
     private double serviceTime = Double.MAX_VALUE;
     private double exitTime = Double.MAX_VALUE;
     double expectation = 0d;
+    private Requirement serving;
 
     public ServiceSystem(Type streamRule, Type serviceRule, int deviceCount, int queueLength, Generator generator) {
 
@@ -43,7 +44,7 @@ public class ServiceSystem {
         if (time >= generationTime) {
             generationCycle();
             requirementsNow = calculateRequirementsInSystem();
-            serviceCycle();
+            serviceTime = time;
         }
 
         if (time >= serviceTime) {
@@ -52,7 +53,7 @@ public class ServiceSystem {
         if (time >= exitTime) {
             exitCycle();
         }
-        time += getNextActionTime();
+        time = getNextActionTime();
     }
 
     private double getNextActionTime() {
@@ -60,7 +61,6 @@ public class ServiceSystem {
         times.add(generationTime);
         times.add(serviceTime);
         times.add(exitTime);
-
         return Collections.min(times);
     }
 
@@ -68,23 +68,24 @@ public class ServiceSystem {
         if (!generator.getElements().isEmpty()) {
             Requirement tmp = generator.getElements().poll();
             tmp.setArriveTime(time);
-            queueWaiting.add(tmp);
             generationTime = time + streamRandomizer.getTimestamp();
+            serving = tmp;
         }
     }
 
     private void serviceCycle() {
-        for (Device device : devices) {
-            if (queueWaiting.size() > 0) {
-                Requirement tmp = queueWaiting.poll();
+        if (serving != null) {
+            for (Device device : devices) {
                 if (!device.isBusy()) {
-                    tmp.setServiceTime(time);
+                    serving.setServiceTime(time);
                     exitTime = time + serviceRandomizer.getTimestamp();
-                    device.setServing(tmp);
+                    device.setServing(serving);
+                    serving = null;
                     break;
                 }
-            } else serviceTime = Double.MAX_VALUE;
+            }
         }
+        serviceTime = Double.MAX_VALUE;
     }
 
     private void exitCycle() {
@@ -95,6 +96,7 @@ public class ServiceSystem {
                 serviceTime = time;
                 expectation += tmp.getExitTime() - tmp.getArriveTime();
                 queueServed.add(tmp);
+                exitTime = Double.MAX_VALUE;
             }
         }
     }
